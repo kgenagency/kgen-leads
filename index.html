@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KGEN CRM — Leads</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23131313'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='%23d4af37' font-family='Arial' font-weight='bold'>K</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#faf9f6;
+  --surface:#ffffff;
+  --ink:#141310;
+  --ink-2:#57544c;
+  --muted:#8b877c;
+  --line:#eae6dc;
+  --line-soft:#f1eee6;
+  --gold:#c99700;
+  --gold-deep:#8a6a00;
+  --gold-text:#7a5b00;
+  --gold-wash:#faf3df;
+  --gold-wash-2:#f5ead0;
+  --gold-grad:linear-gradient(135deg,#e6c14a 0%,#c99700 55%,#a67c00 100%);
+  --blue:#2a78d6;
+  --blue-text:#1c5cab;
+  --blue-wash:#e6eefb;
+  --shadow-sm:0 1px 2px rgba(20,19,16,.05);
+  --shadow-md:0 6px 24px -6px rgba(20,19,16,.10);
+  --shadow-lg:0 24px 60px -12px rgba(20,19,16,.18);
+  --radius:14px;
+  --font-ui:'Inter',system-ui,-apple-system,sans-serif;
+  --font-display:'Sora','Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font-ui);background:var(--page);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
+a{color:var(--blue-text)}
+::placeholder{color:var(--muted)}
+
+/* ---------- LOGIN ---------- */
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(212,175,55,.14), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(212,175,55,.10), transparent 55%),
+    var(--page);}
+.login-card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow-lg);padding:44px 40px 40px;position:relative;overflow:hidden}
+.login-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--gold-grad)}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:30px}
+.brand-mark{width:44px;height:44px;border-radius:12px;background:#141310;color:#e6c14a;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:22px;flex:none}
+.brand-name{font-family:var(--font-display);font-weight:700;font-size:19px;letter-spacing:-.02em}
+.brand-sub{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.06em;text-transform:uppercase}
+.login-title{font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+.login-sub{color:var(--ink-2);margin-bottom:28px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+.field input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:#fdfcfa;transition:border-color .15s, box-shadow .15s;font-size:14.5px}
+.field input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,151,0,.15)}
+.btn-primary{width:100%;padding:12px;border:none;border-radius:10px;background:#141310;color:#fff;font-weight:600;font-size:15px;transition:transform .1s, box-shadow .15s;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{box-shadow:0 6px 18px -4px rgba(20,19,16,.35)}
+.btn-primary:active{transform:scale(.985)}
+.login-err{display:none;background:#fbe5e5;color:#a32c2c;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:16px}
+
+/* ---------- APP SHELL ---------- */
+.app{display:none;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);}
+.topbar-inner{max-width:1280px;margin:0 auto;padding:0 24px;height:62px;display:flex;align-items:center;gap:18px}
+.topbar .brand{margin:0}
+.topbar .brand-mark{width:34px;height:34px;border-radius:9px;font-size:17px}
+.topbar .brand-name{font-size:16px}
+.top-search{flex:1;max-width:420px;position:relative}
+.top-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.top-search input{width:100%;padding:9px 14px 9px 38px;border:1px solid var(--line);border-radius:99px;background:#f6f4ee;transition:all .15s}
+.top-search input:focus{outline:none;background:#fff;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,151,0,.13)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.user-chip{display:flex;align-items:center;gap:9px;padding:5px 12px 5px 6px;border:1px solid var(--line);border-radius:99px;background:#fff}
+.avatar{width:26px;height:26px;border-radius:50%;background:var(--gold-grad);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.user-name{font-weight:600;font-size:13px}
+.icon-btn{border:1px solid var(--line);background:#fff;border-radius:99px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:var(--ink-2);transition:all .15s}
+.icon-btn:hover{border-color:#d8d3c6;background:#faf8f2}
+
+.main{max-width:1280px;margin:0 auto;padding:28px 24px 80px}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.page-title{font-family:var(--font-display);font-size:26px;font-weight:700;letter-spacing:-.03em}
+.page-sub{color:var(--muted);margin-top:2px;font-size:13.5px}
+.btn-gold{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:none;border-radius:10px;background:var(--gold-grad);color:#fff;font-weight:600;font-size:14px;box-shadow:0 4px 14px -4px rgba(166,124,0,.5);transition:transform .1s, filter .15s}
+.btn-gold:hover{filter:brightness(1.05)}
+.btn-gold:active{transform:scale(.98)}
+
+/* ---------- STATS ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.stat-label{font-size:12.5px;font-weight:600;color:var(--muted);letter-spacing:.02em;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.stat-dot{width:8px;height:8px;border-radius:3px;background:var(--gold-grad)}
+.stat-value{font-family:var(--font-display);font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.stat-note{font-size:12px;color:var(--muted);margin-top:7px}
+.stat-note b{color:var(--ink-2);font-weight:600}
+
+/* ---------- FILTERS ---------- */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.seg{display:inline-flex;background:#f1eee6;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:none;background:transparent;padding:7px 14px;border-radius:8px;font-weight:600;font-size:13px;color:var(--ink-2);transition:all .15s}
+.seg button.active{background:#fff;color:var(--ink);box-shadow:var(--shadow-sm)}
+.select-wrap{position:relative}
+.select-wrap select{appearance:none;padding:8px 32px 8px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;font-weight:500;font-size:13px;color:var(--ink-2)}
+.select-wrap::after{content:"";position:absolute;right:12px;top:50%;width:7px;height:7px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.toolbar .count{margin-left:auto;font-size:12.5px;color:var(--muted)}
+
+/* ---------- TABLE ---------- */
+.table-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);background:#fcfbf8;white-space:nowrap}
+tbody td{padding:14px 16px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+tbody tr{cursor:pointer;transition:background .12s;position:relative}
+tbody tr:hover{background:#fcfaf4}
+tbody tr:last-child td{border-bottom:none}
+td.lead-cell{min-width:190px}
+.accent{position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0}
+.accent.gold{background:var(--gold)}
+.accent.blue{background:var(--blue)}
+.lead-name{font-weight:600;font-size:14.5px}
+.lead-social{font-size:12.5px;color:var(--muted);margin-top:1px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.contact{font-size:13px;color:var(--ink-2);line-height:1.45}
+.contact .email{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.badge .bdot{width:7px;height:7px;border-radius:50%}
+.badge.src-gold{background:var(--gold-wash);color:var(--gold-text)}
+.badge.src-gold .bdot{background:var(--gold)}
+.badge.src-blue{background:var(--blue-wash);color:var(--blue-text)}
+.badge.src-blue .bdot{background:var(--blue)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;border:none;white-space:nowrap}
+.pill .pdot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.75}
+.date-cell{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.activity-cell{font-size:12.5px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.activity-cell b{color:var(--ink-2);font-weight:600}
+.src-plain{font-size:13px;color:var(--ink-2)}
+.empty{padding:60px 20px;text-align:center;color:var(--muted)}
+
+/* status pill colors */
+.st-new{background:#eef1f4;color:#3f4a56}
+.st-contacted{background:#fdf1d8;color:#8a6100}
+.st-responded{background:#e2f3ee;color:#0d6b4f}
+.st-call_booked{background:#ece8fb;color:#4a3aa7}
+.st-call_held{background:#e3edfb;color:#1c5cab}
+.st-client{background:#e2f4e2;color:#067306}
+.st-lost{background:#fbe5e5;color:#a32c2c}
+.st-no_response{background:#f0efec;color:#6b6961}
+
+/* ---------- DRAWER ---------- */
+.overlay{position:fixed;inset:0;background:rgba(20,19,16,.35);opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+.overlay.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:520px;max-width:100vw;background:var(--surface);z-index:60;transform:translateX(105%);transition:transform .25s cubic-bezier(.2,.8,.2,1);box-shadow:var(--shadow-lg);display:flex;flex-direction:column}
+.drawer.open{transform:translateX(0)}
+.drawer-head{padding:22px 26px 0;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fdfbf5, #fff)}
+.drawer-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.drawer-title{font-family:var(--font-display);font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.drawer-close{margin-left:auto;flex:none}
+.drawer-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.drawer-tabs{display:flex;gap:22px}
+.drawer-tabs button{border:none;background:none;padding:0 2px 12px;font-weight:600;font-size:13.5px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.drawer-tabs button.active{color:var(--ink);border-color:var(--gold)}
+.drawer-body{flex:1;overflow-y:auto;padding:22px 26px}
+.info-grid{display:grid;grid-template-columns:1fr;gap:2px}
+.info-row{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:13.5px}
+.info-row .k{width:110px;flex:none;color:var(--muted);font-weight:500}
+.info-row .v{color:var(--ink);word-break:break-word}
+.status-select-row{display:flex;align-items:center;gap:10px;margin:16px 0 6px}
+.status-select-row label{font-size:12.5px;font-weight:600;color:var(--ink-2)}
+
+/* timeline */
+.timeline{display:flex;flex-direction:column;gap:0;margin-top:4px}
+.t-item{display:flex;gap:12px;position:relative;padding-bottom:18px}
+.t-item::before{content:"";position:absolute;left:13px;top:30px;bottom:0;width:2px;background:var(--line-soft)}
+.t-item:last-child::before{display:none}
+.t-icon{width:28px;height:28px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;z-index:1}
+.t-icon.comment{background:var(--gold-wash-2);color:var(--gold-deep)}
+.t-icon.status{background:#eef1f4;color:#3f4a56}
+.t-icon.fathom{background:#ece8fb;color:#4a3aa7}
+.t-icon.screenshot{background:var(--blue-wash);color:var(--blue-text)}
+.t-content{flex:1;min-width:0}
+.t-meta{font-size:12px;color:var(--muted);margin-bottom:3px}
+.t-meta b{color:var(--ink);font-weight:600}
+.t-body{background:#faf9f5;border:1px solid var(--line-soft);border-radius:10px;padding:10px 13px;font-size:13.5px;white-space:pre-wrap;word-break:break-word}
+.t-body a{font-weight:500}
+.t-img{margin-top:8px;max-width:100%;border-radius:10px;border:1px solid var(--line);cursor:zoom-in;max-height:220px;object-fit:cover;display:block}
+.t-status-line{font-size:13px;color:var(--ink-2);padding:2px 0}
+
+/* composer */
+.composer{border-top:1px solid var(--line);padding:16px 26px 18px;background:#fdfcf9}
+.composer textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 14px;min-height:70px;resize:vertical;background:#fff}
+.composer textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,151,0,.13)}
+.composer-actions{display:flex;align-items:center;gap:8px;margin-top:10px}
+.mini-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border:1px solid var(--line);border-radius:9px;background:#fff;font-weight:600;font-size:12.5px;color:var(--ink-2);transition:all .15s}
+.mini-btn:hover{border-color:#d8d3c6;background:#faf8f2}
+.composer .btn-gold{margin-left:auto;padding:8px 18px;font-size:13.5px}
+.attach-preview{display:none;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;color:var(--ink-2);background:var(--blue-wash);border-radius:9px;padding:7px 12px}
+.attach-preview img{height:34px;border-radius:6px}
+.attach-preview button{border:none;background:none;color:var(--blue-text);font-weight:700}
+
+/* lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(15,14,12,.88);z-index:100;display:none;align-items:center;justify-content:center;padding:30px;cursor:zoom-out}
+.lightbox.open{display:flex}
+.lightbox img{max-width:100%;max-height:100%;border-radius:12px}
+
+/* modal (new lead) */
+.modal-wrap{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-wrap.open{display:flex}
+.modal-bg{position:absolute;inset:0;background:rgba(20,19,16,.4)}
+.modal{position:relative;background:#fff;border-radius:18px;box-shadow:var(--shadow-lg);width:100%;max-width:460px;padding:28px;max-height:90vh;overflow-y:auto}
+.modal h3{font-family:var(--font-display);font-size:19px;margin-bottom:18px}
+.modal .field input,.modal .field select{width:100%;padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:#fdfcfa}
+.modal .field input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,151,0,.13)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.btn-ghost{padding:10px 16px;border:1px solid var(--line);border-radius:10px;background:#fff;font-weight:600;font-size:13.5px;color:var(--ink-2)}
+
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#141310;color:#fff;padding:11px 20px;border-radius:99px;font-size:13.5px;font-weight:500;z-index:120;transition:transform .25s;box-shadow:var(--shadow-lg)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* mobile cards */
+.cards{display:none;flex-direction:column;gap:12px}
+.lead-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;cursor:pointer}
+.lead-card .accent{top:0;bottom:0;border-radius:0}
+.lead-card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}
+.lead-card .contact{margin:6px 0 10px}
+.lead-card-badges{display:flex;gap:8px;flex-wrap:wrap}
+
+@media (max-width: 980px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .table-card{display:none}
+  .cards{display:flex}
+  .drawer{width:100vw}
+  .topbar-inner{padding:0 16px;gap:10px}
+  .main{padding:20px 16px 60px}
+  .top-search{max-width:none}
+  .user-chip .user-name{display:none}
+  .brand-name{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div class="login-page" id="loginPage">
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-mark">K</div>
+      <div>
+        <div class="brand-name">KGEN CRM</div>
+        <div class="brand-sub">Lead Management</div>
+      </div>
+    </div>
+    <div class="login-title">Welcome back</div>
+    <div class="login-sub">Sign in to manage your leads.</div>
+    <div class="login-err" id="loginErr">Wrong username or password.</div>
+    <form id="loginForm">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="e.g. mihajlo" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <button class="btn-primary" type="submit">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">K</div>
+        <div class="brand-name">KGEN CRM</div>
+      </div>
+      <div class="top-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="text" id="search" placeholder="Search name, email, phone, social…">
+      </div>
+      <div class="top-right">
+        <div class="user-chip"><div class="avatar" id="avatar">M</div><div class="user-name" id="userName">Mihajlo</div></div>
+        <button class="icon-btn" id="logoutBtn" title="Sign out">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-head">
+      <div>
+        <div class="page-title">Leads</div>
+        <div class="page-sub" id="pageSub">All booking-page leads in one place.</div>
+      </div>
+      <button class="btn-gold" id="newLeadBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Add lead
+      </button>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="toolbar">
+      <div class="seg" id="srcSeg">
+        <button data-src="all" class="active">All</button>
+        <button data-src="organic">Instagram / Other</button>
+        <button data-src="automate">Automate</button>
+      </div>
+      <div class="select-wrap">
+        <select id="statusFilter">
+          <option value="all">All statuses</option>
+        </select>
+      </div>
+      <div class="select-wrap">
+        <select id="sortSel">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="activity">Recent activity</option>
+        </select>
+      </div>
+      <div class="count" id="countLbl"></div>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead><tr>
+          <th>Lead</th><th>Contact</th><th>Heard from</th><th>Source</th><th>Status</th><th>Last activity</th><th>Added</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="emptyState" style="display:none">No leads match your filters.</div>
+    </div>
+
+    <div class="cards" id="cards"></div>
+  </div>
+</div>
+
+<!-- ============ DRAWER ============ -->
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="drawer-top">
+      <div>
+        <div class="drawer-title" id="dTitle">Lead</div>
+        <div class="page-sub" id="dSub"></div>
+      </div>
+      <button class="icon-btn drawer-close" id="drawerClose">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="drawer-badges" id="dBadges"></div>
+    <div class="drawer-tabs">
+      <button class="active" data-tab="activity">Activity</button>
+      <button data-tab="details">Details</button>
+    </div>
+  </div>
+  <div class="drawer-body">
+    <div id="tabActivity">
+      <div class="status-select-row">
+        <label>Status</label>
+        <div class="select-wrap"><select id="dStatusSel"></select></div>
+      </div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+    <div id="tabDetails" style="display:none">
+      <div class="info-grid" id="infoGrid"></div>
+    </div>
+  </div>
+  <div class="composer">
+    <textarea id="commentBox" placeholder="Write a comment… (paste a screenshot directly, or drop a Fathom link)"></textarea>
+    <div class="attach-preview" id="attachPreview"><img id="attachThumb"><span id="attachName"></span><button id="attachRemove">✕</button></div>
+    <div class="composer-actions">
+      <button class="mini-btn" id="attachBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        Screenshot
+      </button>
+      <button class="mini-btn" id="fathomBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        Fathom link
+      </button>
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+      <button class="btn-gold" id="postBtn">Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ NEW LEAD MODAL ============ -->
+<div class="modal-wrap" id="modalWrap">
+  <div class="modal-bg" id="modalBg"></div>
+  <div class="modal">
+    <h3>Add lead manually</h3>
+    <div class="field"><label>Full name *</label><input id="mName"></div>
+    <div class="field"><label>Email</label><input id="mEmail" type="email"></div>
+    <div class="field"><label>Phone</label><input id="mPhone"></div>
+    <div class="field"><label>Social media / Business</label><input id="mSocial"></div>
+    <div class="field"><label>Heard from</label>
+      <select id="mHeard"><option value="instagram">Instagram</option><option value="other">Other</option><option value="automate">Automate</option></select>
+    </div>
+    <div class="field"><label>Source</label><input id="mSource" value="Manual entry"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="mCancel">Cancel</button>
+      <button class="btn-gold" id="mSave">Add lead</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox"><img id="lightboxImg"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

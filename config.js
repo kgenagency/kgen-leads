@@ -1,0 +1,2 @@
+window.KGEN_SUPABASE_URL = 'https://arhewpiykwtqytqgnshv.supabase.co';
+window.KGEN_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyaGV3cGl5a3d0cXl0cWduc2h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1ODMxOTcsImV4cCI6MjA5OTE1OTE5N30.ox5wg0teeFwjf5xAJpuDNLzpHuNoOkbt4NUfh3G1kVs';
