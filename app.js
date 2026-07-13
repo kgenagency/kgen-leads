@@ -104,6 +104,16 @@ function toast(msg) {
   t._h = setTimeout(() => t.classList.remove('show'), 2400);
 }
 const BELL_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+// Tidy the social/business field: drop protocol + www, keep handles clean, cap length
+function cleanSocial(s) {
+  let v = (s || '').trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v) || /^www\./i.test(v)) {
+    v = v.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '');
+    v = v.length > 34 ? v.slice(0, 32) + '…' : v;
+  }
+  return v;
+}
 function dateStrLocal(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
@@ -351,20 +361,20 @@ function renderKanban() {
       <div class="kb-cards">
         ${col.length ? col.map(l => {
           const g = srcGroup(l.heard_from);
-          return `<div class="kb-card" data-id="${l.id}">
-            <span class="accent ${g === 'automate' ? 'blue' : 'gold'}"></span>
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px">
+          const social = cleanSocial(l.social) || l.email || '';
+          return `<div class="kb-card ${g === 'automate' ? 'is-automate' : 'is-organic'}" data-id="${l.id}">
+            <div class="kb-card-head">
               <div class="kb-name">${esc(l.name)}</div>
               ${fuBtnHtml(l)}
             </div>
-            <div class="kb-social">${esc(l.social || l.email || '')}</div>
+            ${social ? `<div class="kb-social">${esc(social)}</div>` : ''}
             <div class="kb-meta">
               ${heardBadge(l.heard_from)}
               ${l.followup_at ? `<span class="kb-fu ${fuIsOverdue(l) ? 'overdue' : ''}">${BELL_SVG} ${fmtFuDate(l.followup_at)}</span>` : ''}
             </div>
             <div class="kb-actions">
-              <button class="kb-arrow" data-move="${l.id}|-1" title="Move to ${si > 0 ? STATUSES[si-1].label : ''}" ${si === 0 ? 'disabled' : ''}>←</button>
-              <button class="kb-arrow" data-move="${l.id}|1" title="Move to ${si < STATUSES.length-1 ? STATUSES[si+1].label : ''}" ${si === STATUSES.length - 1 ? 'disabled' : ''}>→</button>
+              <button class="kb-arrow" data-move="${l.id}|-1" title="${si > 0 ? 'Move to ' + STATUSES[si-1].label : ''}" ${si === 0 ? 'disabled' : ''}><span>←</span></button>
+              <button class="kb-arrow" data-move="${l.id}|1" title="${si < STATUSES.length-1 ? 'Move to ' + STATUSES[si+1].label : ''}" ${si === STATUSES.length - 1 ? 'disabled' : ''}><span>→</span></button>
             </div>
           </div>`;
         }).join('') : '<div class="kb-empty">—</div>'}
@@ -395,7 +405,7 @@ function renderTableView() {
       <td class="lead-cell" style="position:relative">
         <span class="accent ${g === 'automate' ? 'blue' : 'gold'}"></span>
         <div class="lead-name">${esc(l.name)}${fuBtnHtml(l)}</div>
-        <div class="lead-social">${esc(l.social || '')}</div>
+        <div class="lead-social">${esc(cleanSocial(l.social))}</div>
       </td>
       <td><div class="contact"><div class="email">${esc(l.email || '—')}</div><div>${esc(l.phone || '')}</div></div></td>
       <td>${heardBadge(l.heard_from)}</td>
@@ -411,7 +421,7 @@ function renderTableView() {
     return `<div class="lead-card" data-id="${l.id}">
       <span class="accent ${g === 'automate' ? 'blue' : 'gold'}"></span>
       <div class="lead-card-top">
-        <div><div class="lead-name">${esc(l.name)}${fuBtnHtml(l)}</div><div class="lead-social">${esc(l.social || '')}</div></div>
+        <div><div class="lead-name">${esc(l.name)}${fuBtnHtml(l)}</div><div class="lead-social">${esc(cleanSocial(l.social))}</div></div>
         ${statusPill(l.status)}
       </div>
       <div class="contact"><div class="email">${esc(l.email || '')}</div><div>${esc(l.phone || '')}</div></div>
