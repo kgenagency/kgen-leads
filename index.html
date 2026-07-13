@@ -220,6 +220,59 @@ td.lead-cell{min-width:190px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#141310;color:#fff;padding:11px 20px;border-radius:99px;font-size:13.5px;font-weight:500;z-index:120;transition:transform .25s;box-shadow:var(--shadow-lg)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
+/* ---------- FOLLOW UP SECTION ---------- */
+.fu-section{margin-bottom:22px;display:none}
+.fu-head{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.fu-title{font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:-.01em}
+.fu-count{background:var(--gold-grad);color:#fff;font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px}
+.fu-cards{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px}
+.fu-card{flex:0 0 250px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow-sm);cursor:pointer;transition:box-shadow .15s}
+.fu-card:hover{box-shadow:var(--shadow-md)}
+.fu-card.overdue{border-left-color:#d03b3b;background:#fffafa}
+.fu-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.fu-name{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fu-date{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--gold-text);margin-top:3px}
+.fu-card.overdue .fu-date{color:#a32c2c}
+.fu-overdue-tag{font-size:10.5px;font-weight:700;letter-spacing:.04em;background:#fbe5e5;color:#a32c2c;border-radius:5px;padding:2px 6px;text-transform:uppercase}
+.fu-card-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:9px;gap:8px}
+.fu-done{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 11px;font-size:12px;font-weight:600;color:#0d6b4f;transition:all .15s}
+.fu-done:hover{background:#e2f3ee;border-color:#bfe3d6}
+
+/* follow-up bell button */
+.fu-btn{border:none;background:none;padding:3px;border-radius:7px;color:#c9c4b6;display:inline-flex;align-items:center;transition:all .15s;vertical-align:-3px;margin-left:5px}
+.fu-btn:hover{background:var(--gold-wash-2);color:var(--gold-deep)}
+.fu-btn.on{color:var(--gold)}
+.fu-btn.overdue{color:#d03b3b}
+
+/* ---------- KANBAN ---------- */
+.kanban{display:none;gap:12px;overflow-x:auto;align-items:flex-start;padding-bottom:16px}
+.kb-col{flex:0 0 235px;background:#f4f1e9;border-radius:14px;padding:10px 10px 12px;max-height:calc(100vh - 300px);display:flex;flex-direction:column}
+.kb-col-head{display:flex;align-items:center;gap:8px;padding:3px 6px 10px;flex:none}
+.kb-col-title{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+.kb-col-count{font-size:11.5px;font-weight:700;color:var(--muted);background:#fff;border-radius:99px;padding:1px 8px;border:1px solid var(--line)}
+.kb-cards{display:flex;flex-direction:column;gap:8px;overflow-y:auto;min-height:20px}
+.kb-card{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:11px 12px;box-shadow:var(--shadow-sm);cursor:pointer;position:relative;overflow:hidden;transition:box-shadow .15s}
+.kb-card:hover{box-shadow:var(--shadow-md)}
+.kb-card .accent{top:0;bottom:0;border-radius:0}
+.kb-name{font-weight:600;font-size:13.5px;line-height:1.3;padding-right:2px}
+.kb-social{font-size:11.5px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kb-meta{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.kb-meta .badge{padding:2px 8px;font-size:10.5px}
+.kb-fu{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--gold-text);background:var(--gold-wash);border-radius:5px;padding:2px 6px}
+.kb-fu.overdue{color:#a32c2c;background:#fbe5e5}
+.kb-actions{display:flex;justify-content:space-between;margin-top:9px;gap:6px}
+.kb-arrow{flex:1;border:1px solid var(--line);background:#fdfcf9;border-radius:8px;padding:4px 0;font-size:13px;font-weight:700;color:var(--ink-2);transition:all .15s;line-height:1.2}
+.kb-arrow:hover{background:var(--gold-wash-2);border-color:var(--gold);color:var(--gold-deep)}
+.kb-arrow:disabled{opacity:.25;pointer-events:none}
+.kb-empty{font-size:12px;color:#b6b2a6;text-align:center;padding:14px 4px}
+
+/* followup modal */
+.fu-modal .field input[type="date"]{width:100%;padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:#fdfcfa;font-size:14px}
+.fu-quick{display:flex;gap:8px;margin:4px 0 6px;flex-wrap:wrap}
+.fu-quick button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 13px;font-size:12.5px;font-weight:600;color:var(--ink-2);transition:all .15s}
+.fu-quick button:hover{border-color:var(--gold);background:var(--gold-wash);color:var(--gold-deep)}
+.fu-remove{margin-right:auto;border:none;background:none;color:#a32c2c;font-weight:600;font-size:13px;padding:10px 0}
+
 /* mobile cards */
 .cards{display:none;flex-direction:column;gap:12px}
 .lead-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;cursor:pointer}
@@ -232,6 +285,8 @@ td.lead-cell{min-width:190px}
   .stats{grid-template-columns:repeat(2,1fr)}
   .table-card{display:none}
   .cards{display:flex}
+  .kb-col{flex:0 0 82vw;max-height:none}
+  .fu-card{flex:0 0 78vw}
   .drawer{width:100vw}
   .topbar-inner{padding:0 16px;gap:10px}
   .main{padding:20px 16px 60px}
@@ -305,7 +360,20 @@ td.lead-cell{min-width:190px}
 
     <div class="stats" id="stats"></div>
 
+    <div class="fu-section" id="fuSection">
+      <div class="fu-head">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c99700" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="fu-title">Needs follow up</div>
+        <div class="fu-count" id="fuCount">0</div>
+      </div>
+      <div class="fu-cards" id="fuCards"></div>
+    </div>
+
     <div class="toolbar">
+      <div class="seg" id="viewSeg">
+        <button data-view="table" class="active">Table</button>
+        <button data-view="pipeline">Pipeline</button>
+      </div>
       <div class="seg" id="srcSeg">
         <button data-src="all" class="active">All</button>
         <button data-src="organic">Instagram / Other</button>
@@ -337,6 +405,8 @@ td.lead-cell{min-width:190px}
     </div>
 
     <div class="cards" id="cards"></div>
+
+    <div class="kanban" id="kanban"></div>
   </div>
 </div>
 
@@ -364,6 +434,7 @@ td.lead-cell{min-width:190px}
       <div class="status-select-row">
         <label>Status</label>
         <div class="select-wrap"><select id="dStatusSel"></select></div>
+        <button class="mini-btn" id="dFuBtn" style="margin-left:auto"></button>
       </div>
       <div class="timeline" id="timeline"></div>
     </div>
@@ -405,6 +476,26 @@ td.lead-cell{min-width:190px}
     <div class="modal-actions">
       <button class="btn-ghost" id="mCancel">Cancel</button>
       <button class="btn-gold" id="mSave">Add lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FOLLOW UP MODAL ============ -->
+<div class="modal-wrap fu-modal" id="fuModalWrap">
+  <div class="modal-bg" id="fuModalBg"></div>
+  <div class="modal" style="max-width:400px">
+    <h3 id="fuModalTitle">Follow up</h3>
+    <div class="fu-quick">
+      <button data-days="1">Tomorrow</button>
+      <button data-days="2">In 2 days</button>
+      <button data-days="7">In a week</button>
+      <button data-days="14">In 2 weeks</button>
+    </div>
+    <div class="field"><label>Follow up on</label><input type="date" id="fuDate"></div>
+    <div class="modal-actions">
+      <button class="fu-remove" id="fuRemove" style="display:none">Remove follow-up</button>
+      <button class="btn-ghost" id="fuCancel">Cancel</button>
+      <button class="btn-gold" id="fuSave">Save</button>
     </div>
   </div>
 </div>

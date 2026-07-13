@@ -27,15 +27,17 @@ let state = {
   leads: [],            // lead rows
   activities: {},       // lead_id -> [activity]
   filters: { src: 'all', status: 'all', q: '', sort: 'newest' },
+  view: (function(){ try { return localStorage.getItem('kgen_view') || 'table'; } catch(e){ return 'table'; } })(),
   openLeadId: null,
+  fuLeadId: null,       // lead being edited in follow-up modal
   attach: null,         // pending screenshot {file, dataUrl}
 };
 
 /* ---------------- demo data ---------------- */
 const demoLeads = [
-  { id: 1, created_at: '2026-07-11T21:26:00Z', name: 'Zach Bruno', email: 'brunozachary1@outlook.com', phone: '+15142164117', social: 'Google business Soclean detailz', heard_from: 'instagram', source: 'Booking page', status: 'call_booked' },
+  { id: 1, created_at: '2026-07-11T21:26:00Z', name: 'Zach Bruno', email: 'brunozachary1@outlook.com', phone: '+15142164117', social: 'Google business Soclean detailz', heard_from: 'instagram', source: 'Booking page', status: 'call_booked', followup_at: '2026-07-15' },
   { id: 2, created_at: '2026-07-10T23:22:00Z', name: 'Bryan Landry', email: 'bryan@royalprestigeauto.com', phone: '4385456451', social: 'Royal Prestige Auto', heard_from: 'other', source: 'Booking page', status: 'responded' },
-  { id: 3, created_at: '2026-07-10T21:09:00Z', name: 'Daniel Walker', email: 'tobysdetails@gmail.com', phone: '7789331188', social: "Toby's car detail / Walker mobile detailing", heard_from: 'other', source: 'Booking page', status: 'contacted' },
+  { id: 3, created_at: '2026-07-10T21:09:00Z', name: 'Daniel Walker', email: 'tobysdetails@gmail.com', phone: '7789331188', social: "Toby's car detail / Walker mobile detailing", heard_from: 'other', source: 'Booking page', status: 'contacted', followup_at: '2026-07-11' },
   { id: 4, created_at: '2026-07-10T20:26:00Z', name: 'Oliver Ferguson', email: 'oliverferguson445@gmail.com', phone: '7860220702', social: 'Rinse Revive Detailing Ltd', heard_from: 'automate', source: 'Booking page', status: 'call_held' },
   { id: 5, created_at: '2026-07-10T13:19:00Z', name: 'Yannick Aubry', email: 'yanaubry@hotmail.com', phone: '+15149418145', social: 'Comme 9 Esthétique Auto', heard_from: 'other', source: 'Booking page', status: 'new' },
   { id: 6, created_at: '2026-07-10T09:02:00Z', name: 'Devanshu Sharma', email: 'devanshus742@gmail.com', phone: '+13686454918', social: 'Shineandglowssautodetailing', heard_from: 'instagram', source: 'Booking page', status: 'new' },
@@ -100,6 +102,28 @@ function toast(msg) {
   t.classList.add('show');
   clearTimeout(t._h);
   t._h = setTimeout(() => t.classList.remove('show'), 2400);
+}
+const BELL_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+function dateStrLocal(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function todayStr() { return dateStrLocal(new Date()); }
+function addDaysStr(n) { const d = new Date(); d.setDate(d.getDate() + n); return dateStrLocal(d); }
+function fuIsOverdue(lead) {
+  return lead.followup_at && lead.followup_at < todayStr();
+}
+function fmtFuDate(iso) {
+  const t = todayStr();
+  if (iso === t) return 'Today';
+  const d = new Date(iso + 'T00:00:00');
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  if (d.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+function fuBtnHtml(lead) {
+  const cls = lead.followup_at ? (fuIsOverdue(lead) ? 'fu-btn overdue' : 'fu-btn on') : 'fu-btn';
+  const title = lead.followup_at ? `Follow up: ${fmtFuDate(lead.followup_at)}` : 'Set follow-up';
+  return `<button class="${cls}" data-fu="${lead.id}" title="${title}">${BELL_SVG}</button>`;
 }
 function lastActivity(leadId) {
   const acts = (state.activities[leadId] || []).filter(a => a.type !== 'status' || !a.body.startsWith('Lead created'));
@@ -207,6 +231,31 @@ async function createLead(fields) {
   return lead;
 }
 
+async function saveFollowup(lead, dateStr) {
+  const old = lead.followup_at;
+  lead.followup_at = dateStr;
+  if (!DEMO) {
+    const { error } = await sb.from('crm_leads').update({ followup_at: dateStr }).eq('id', lead.id);
+    if (error) { toast('Failed to save follow-up'); lead.followup_at = old; renderAll(); return; }
+  }
+  if (dateStr) {
+    await addActivity(lead.id, 'status', `Follow-up set for ${fmtFuDate(dateStr)} (${dateStr})`);
+    toast(`Follow-up set: ${fmtFuDate(dateStr)}`);
+  } else {
+    await addActivity(lead.id, 'status', 'Follow-up completed ✓');
+    toast('Follow-up done ✓');
+  }
+  renderAll();
+  if (state.openLeadId === lead.id) renderDrawer();
+}
+
+async function moveStatus(lead, dir) {
+  const i = STATUSES.findIndex(s => s.key === lead.status);
+  const j = i + dir;
+  if (j < 0 || j >= STATUSES.length) return;
+  await saveStatus(lead, STATUSES[j].key);
+}
+
 async function deleteLead(lead) {
   if (!DEMO) {
     const { error } = await sb.from('crm_leads').delete().eq('id', lead.id);
@@ -266,7 +315,75 @@ function renderStats() {
       <div class="stat-note"><b>${autom}</b> leads via Automate</div></div>`;
 }
 
-function renderTable() {
+function renderFollowups() {
+  const flagged = state.leads.filter(l => l.followup_at)
+    .sort((a, b) => a.followup_at.localeCompare(b.followup_at));
+  $('fuSection').style.display = flagged.length ? 'block' : 'none';
+  $('fuCount').textContent = flagged.length;
+  $('fuCards').innerHTML = flagged.map(l => {
+    const overdue = fuIsOverdue(l);
+    return `<div class="fu-card ${overdue ? 'overdue' : ''}" data-id="${l.id}">
+      <div class="fu-card-top">
+        <div style="min-width:0">
+          <div class="fu-name">${esc(l.name)}</div>
+          <div class="fu-date">${BELL_SVG} ${fmtFuDate(l.followup_at)}</div>
+        </div>
+        ${overdue ? '<span class="fu-overdue-tag">Overdue</span>' : ''}
+      </div>
+      <div class="fu-card-bottom">
+        ${statusPill(l.status)}
+        <button class="fu-done" data-fudone="${l.id}">✓ Done</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderKanban() {
+  const rows = filteredLeads();
+  $('countLbl').textContent = `${rows.length} of ${state.leads.length} leads`;
+  $('kanban').innerHTML = STATUSES.map((s, si) => {
+    const col = rows.filter(l => l.status === s.key);
+    return `<div class="kb-col">
+      <div class="kb-col-head">
+        <span class="pill st-${s.key}" style="padding:3px 10px;font-size:11px"><span class="pdot"></span>${s.label}</span>
+        <span class="kb-col-count">${col.length}</span>
+      </div>
+      <div class="kb-cards">
+        ${col.length ? col.map(l => {
+          const g = srcGroup(l.heard_from);
+          return `<div class="kb-card" data-id="${l.id}">
+            <span class="accent ${g === 'automate' ? 'blue' : 'gold'}"></span>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px">
+              <div class="kb-name">${esc(l.name)}</div>
+              ${fuBtnHtml(l)}
+            </div>
+            <div class="kb-social">${esc(l.social || l.email || '')}</div>
+            <div class="kb-meta">
+              ${heardBadge(l.heard_from)}
+              ${l.followup_at ? `<span class="kb-fu ${fuIsOverdue(l) ? 'overdue' : ''}">${BELL_SVG} ${fmtFuDate(l.followup_at)}</span>` : ''}
+            </div>
+            <div class="kb-actions">
+              <button class="kb-arrow" data-move="${l.id}|-1" title="Move to ${si > 0 ? STATUSES[si-1].label : ''}" ${si === 0 ? 'disabled' : ''}>←</button>
+              <button class="kb-arrow" data-move="${l.id}|1" title="Move to ${si < STATUSES.length-1 ? STATUSES[si+1].label : ''}" ${si === STATUSES.length - 1 ? 'disabled' : ''}>→</button>
+            </div>
+          </div>`;
+        }).join('') : '<div class="kb-empty">—</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderView() {
+  const isKb = state.view === 'pipeline';
+  document.querySelector('.table-card').style.display = isKb ? 'none' : '';
+  $('cards').style.display = isKb ? 'none' : '';
+  $('kanban').style.display = isKb ? 'flex' : 'none';
+  if (isKb) renderKanban(); else renderTableView();
+}
+
+function renderTable() { renderView(); }
+
+function renderTableView() {
   const rows = filteredLeads();
   $('countLbl').textContent = `${rows.length} of ${state.leads.length} leads`;
   $('emptyState').style.display = rows.length ? 'none' : 'block';
@@ -277,7 +394,7 @@ function renderTable() {
     return `<tr data-id="${l.id}">
       <td class="lead-cell" style="position:relative">
         <span class="accent ${g === 'automate' ? 'blue' : 'gold'}"></span>
-        <div class="lead-name">${esc(l.name)}</div>
+        <div class="lead-name">${esc(l.name)}${fuBtnHtml(l)}</div>
         <div class="lead-social">${esc(l.social || '')}</div>
       </td>
       <td><div class="contact"><div class="email">${esc(l.email || '—')}</div><div>${esc(l.phone || '')}</div></div></td>
@@ -294,20 +411,16 @@ function renderTable() {
     return `<div class="lead-card" data-id="${l.id}">
       <span class="accent ${g === 'automate' ? 'blue' : 'gold'}"></span>
       <div class="lead-card-top">
-        <div><div class="lead-name">${esc(l.name)}</div><div class="lead-social">${esc(l.social || '')}</div></div>
+        <div><div class="lead-name">${esc(l.name)}${fuBtnHtml(l)}</div><div class="lead-social">${esc(l.social || '')}</div></div>
         ${statusPill(l.status)}
       </div>
       <div class="contact"><div class="email">${esc(l.email || '')}</div><div>${esc(l.phone || '')}</div></div>
       <div class="lead-card-badges">${heardBadge(l.heard_from)}<span class="src-plain" style="font-size:12px;color:var(--muted);align-self:center">${esc(l.source || '')} · ${fmtDate(l.created_at)}</span></div>
     </div>`;
   }).join('');
-
-  document.querySelectorAll('[data-id]').forEach(el => {
-    el.addEventListener('click', () => openDrawer(el.dataset.id));
-  });
 }
 
-function renderAll() { renderStats(); renderTable(); }
+function renderAll() { renderStats(); renderFollowups(); renderView(); }
 
 /* ---------------- drawer ---------------- */
 function currentLead() {
@@ -333,6 +446,12 @@ function renderDrawer() {
 
   $('dStatusSel').innerHTML = STATUSES.map(s =>
     `<option value="${s.key}" ${s.key === l.status ? 'selected' : ''}>${s.label}</option>`).join('');
+
+  const dfu = $('dFuBtn');
+  dfu.innerHTML = `${BELL_SVG} ${l.followup_at ? 'Follow up: ' + fmtFuDate(l.followup_at) : 'Set follow-up'}`;
+  dfu.style.color = l.followup_at ? (fuIsOverdue(l) ? '#a32c2c' : 'var(--gold-deep)') : '';
+  dfu.style.borderColor = l.followup_at ? (fuIsOverdue(l) ? '#f0d4d4' : '#e8d9ac') : '';
+  dfu.onclick = () => openFuModal(l.id);
 
   $('infoGrid').innerHTML = [
     ['Full name', esc(l.name)],
@@ -428,8 +547,78 @@ async function postComposer() {
   }
 }
 
+/* ---------------- follow-up modal ---------------- */
+function openFuModal(leadId) {
+  const l = state.leads.find(x => String(x.id) === String(leadId));
+  if (!l) return;
+  state.fuLeadId = leadId;
+  $('fuModalTitle').textContent = `Follow up — ${l.name}`;
+  $('fuDate').value = l.followup_at || addDaysStr(1);
+  $('fuDate').min = todayStr();
+  $('fuRemove').style.display = l.followup_at ? 'block' : 'none';
+  $('fuModalWrap').classList.add('open');
+}
+function closeFuModal() {
+  state.fuLeadId = null;
+  $('fuModalWrap').classList.remove('open');
+}
+
 /* ---------------- events ---------------- */
 function bindEvents() {
+  // capture-phase delegation: follow-up bells, done buttons, kanban arrows
+  document.addEventListener('click', (e) => {
+    const fu = e.target.closest('[data-fu]');
+    if (fu) { e.stopPropagation(); e.preventDefault(); openFuModal(fu.dataset.fu); return; }
+    const done = e.target.closest('[data-fudone]');
+    if (done) {
+      e.stopPropagation(); e.preventDefault();
+      const l = state.leads.find(x => String(x.id) === String(done.dataset.fudone));
+      if (l) saveFollowup(l, null);
+      return;
+    }
+    const mv = e.target.closest('[data-move]');
+    if (mv) {
+      e.stopPropagation(); e.preventDefault();
+      const [id, dir] = mv.dataset.move.split('|');
+      const l = state.leads.find(x => String(x.id) === String(id));
+      if (l) moveStatus(l, parseInt(dir, 10));
+      return;
+    }
+  }, true);
+
+  // open drawer on any lead card/row click (bubble phase)
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-id]');
+    if (el) openDrawer(el.dataset.id);
+  });
+
+  // view toggle
+  document.querySelectorAll('#viewSeg button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('#viewSeg button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.view = b.dataset.view;
+    try { localStorage.setItem('kgen_view', state.view); } catch (err) {}
+    renderView();
+  }));
+
+  // follow-up modal
+  $('fuModalBg').addEventListener('click', closeFuModal);
+  $('fuCancel').addEventListener('click', closeFuModal);
+  document.querySelectorAll('.fu-quick button').forEach(b => b.addEventListener('click', () => {
+    $('fuDate').value = addDaysStr(parseInt(b.dataset.days, 10));
+  }));
+  $('fuSave').addEventListener('click', async () => {
+    const l = state.leads.find(x => String(x.id) === String(state.fuLeadId));
+    const val = $('fuDate').value;
+    if (!l || !val) { toast('Pick a date'); return; }
+    closeFuModal();
+    await saveFollowup(l, val);
+  });
+  $('fuRemove').addEventListener('click', async () => {
+    const l = state.leads.find(x => String(x.id) === String(state.fuLeadId));
+    closeFuModal();
+    if (l) await saveFollowup(l, null);
+  });
   $('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     $('loginErr').style.display = 'none';
@@ -501,7 +690,7 @@ function bindEvents() {
     ['mName', 'mEmail', 'mPhone', 'mSocial'].forEach(id => $(id).value = '');
     toast('Lead added ✓');
   });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDrawer(); $('modalWrap').classList.remove('open'); $('lightbox').classList.remove('open'); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDrawer(); closeFuModal(); $('modalWrap').classList.remove('open'); $('lightbox').classList.remove('open'); } });
 }
 
 /* ---------------- boot ---------------- */
@@ -509,6 +698,7 @@ async function enterApp(user) {
   state.user = user;
   $('userName').textContent = user.display;
   $('avatar').textContent = user.display.charAt(0).toUpperCase();
+  document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('active', b.dataset.view === state.view));
   await loadData();
   $('statusFilter').innerHTML = `<option value="all">All statuses</option>` +
     STATUSES.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
