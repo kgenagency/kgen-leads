@@ -353,7 +353,7 @@ function renderKanban() {
   $('countLbl').textContent = `${rows.length} of ${state.leads.length} leads`;
   $('kanban').innerHTML = STATUSES.map((s, si) => {
     const col = rows.filter(l => l.status === s.key);
-    return `<div class="kb-col">
+    return `<div class="kb-col" data-status="${s.key}">
       <div class="kb-col-head">
         <span class="pill st-${s.key}" style="padding:3px 10px;font-size:11px"><span class="pdot"></span>${s.label}</span>
         <span class="kb-col-count">${col.length}</span>
@@ -372,15 +372,90 @@ function renderKanban() {
               ${heardBadge(l.heard_from)}
               ${l.followup_at ? `<span class="kb-fu ${fuIsOverdue(l) ? 'overdue' : ''}">${BELL_SVG} ${fmtFuDate(l.followup_at)}</span>` : ''}
             </div>
-            <div class="kb-actions">
-              <button class="kb-arrow" data-move="${l.id}|-1" title="${si > 0 ? 'Move to ' + STATUSES[si-1].label : ''}" ${si === 0 ? 'disabled' : ''}><span>←</span></button>
-              <button class="kb-arrow" data-move="${l.id}|1" title="${si < STATUSES.length-1 ? 'Move to ' + STATUSES[si+1].label : ''}" ${si === STATUSES.length - 1 ? 'disabled' : ''}><span>→</span></button>
-            </div>
           </div>`;
         }).join('') : '<div class="kb-empty">—</div>'}
       </div>
     </div>`;
   }).join('');
+}
+
+/* ---------------- kanban drag & drop ---------------- */
+let drag = null;
+let justDragged = false;
+
+function initKanbanDrag() {
+  const kanban = $('kanban');
+  kanban.addEventListener('pointerdown', kbPointerDown);
+}
+function kbPointerDown(e) {
+  if (e.button && e.button !== 0) return;              // left button / touch only
+  const card = e.target.closest('.kb-card');
+  if (!card) return;
+  if (e.target.closest('[data-fu]')) return;           // let the bell do its thing
+  const isTouch = e.pointerType === 'touch';
+  drag = { id: card.dataset.id, card, sx: e.clientX, sy: e.clientY, moved: false, ready: !isTouch, ghost: null };
+  if (isTouch) {
+    drag.hold = setTimeout(() => { if (drag) { drag.ready = true; if (navigator.vibrate) navigator.vibrate(12); } }, 240);
+  }
+  window.addEventListener('pointermove', kbPointerMove, { passive: false });
+  window.addEventListener('pointerup', kbPointerUp);
+  window.addEventListener('pointercancel', kbPointerUp);
+}
+function kbPointerMove(e) {
+  if (!drag) return;
+  const dist = Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy);
+  if (!drag.ready) { if (dist > 8) kbCleanup(); return; }   // touch: moved before hold = scroll
+  if (!drag.moved) {
+    if (dist < 5) return;
+    drag.moved = true;
+    const r = drag.card.getBoundingClientRect();
+    drag.ox = drag.sx - r.left;
+    drag.oy = drag.sy - r.top;
+    const g = drag.card.cloneNode(true);
+    g.classList.add('kb-drag-ghost');
+    g.style.width = r.width + 'px';
+    document.body.appendChild(g);
+    drag.ghost = g;
+    drag.card.classList.add('dragging');
+    document.body.classList.add('kb-dragging');
+  }
+  drag.ghost.style.left = (e.clientX - drag.ox) + 'px';
+  drag.ghost.style.top = (e.clientY - drag.oy) + 'px';
+  const under = document.elementFromPoint(e.clientX, e.clientY);
+  const col = under && under.closest('.kb-col');
+  document.querySelectorAll('.kb-col').forEach(c => c.classList.toggle('drop-target', c === col));
+  drag.overCol = col;
+  // edge auto-scroll for the horizontal board
+  const kb = $('kanban');
+  const kr = kb.getBoundingClientRect();
+  if (e.clientX > kr.right - 60) kb.scrollLeft += 14;
+  else if (e.clientX < kr.left + 60) kb.scrollLeft -= 14;
+  e.preventDefault();
+}
+function kbPointerUp() {
+  if (!drag) return;
+  const d = drag;
+  kbCleanup();
+  if (!d.moved) return;                                // a tap → delegated click opens drawer
+  justDragged = true;
+  setTimeout(() => { justDragged = false; }, 80);
+  if (d.overCol && d.overCol.dataset.status) {
+    const lead = state.leads.find(l => String(l.id) === String(d.id));
+    if (lead && lead.status !== d.overCol.dataset.status) saveStatus(lead, d.overCol.dataset.status);
+  }
+}
+function kbCleanup() {
+  window.removeEventListener('pointermove', kbPointerMove);
+  window.removeEventListener('pointerup', kbPointerUp);
+  window.removeEventListener('pointercancel', kbPointerUp);
+  if (drag) {
+    if (drag.hold) clearTimeout(drag.hold);
+    if (drag.ghost) drag.ghost.remove();
+    if (drag.card) drag.card.classList.remove('dragging');
+  }
+  document.body.classList.remove('kb-dragging');
+  document.querySelectorAll('.kb-col').forEach(c => c.classList.remove('drop-target'));
+  drag = null;
 }
 
 function renderView() {
@@ -586,21 +661,16 @@ function bindEvents() {
       if (l) saveFollowup(l, null);
       return;
     }
-    const mv = e.target.closest('[data-move]');
-    if (mv) {
-      e.stopPropagation(); e.preventDefault();
-      const [id, dir] = mv.dataset.move.split('|');
-      const l = state.leads.find(x => String(x.id) === String(id));
-      if (l) moveStatus(l, parseInt(dir, 10));
-      return;
-    }
   }, true);
 
   // open drawer on any lead card/row click (bubble phase)
   document.addEventListener('click', (e) => {
+    if (justDragged) return;                 // ignore the click that ends a drag
     const el = e.target.closest('[data-id]');
     if (el) openDrawer(el.dataset.id);
   });
+
+  initKanbanDrag();
 
   // view toggle
   document.querySelectorAll('#viewSeg button').forEach(b => b.addEventListener('click', () => {
