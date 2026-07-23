@@ -26,6 +26,9 @@
   --blue:#2a78d6;
   --blue-text:#1c5cab;
   --blue-wash:#e6eefb;
+  --green:#1f9d63;
+  --green-text:#136e44;
+  --green-wash:#e3f5ec;
   --shadow-sm:0 1px 2px rgba(20,19,16,.05);
   --shadow-md:0 6px 24px -6px rgba(20,19,16,.10);
   --shadow-lg:0 24px 60px -12px rgba(20,19,16,.18);
@@ -121,6 +124,7 @@ td.lead-cell{min-width:190px}
 .accent{position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0}
 .accent.gold{background:var(--gold)}
 .accent.blue{background:var(--blue)}
+.accent.green{background:var(--green)}
 .lead-name{font-weight:600;font-size:14.5px}
 .lead-social{font-size:12.5px;color:var(--muted);margin-top:1px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .contact{font-size:13px;color:var(--ink-2);line-height:1.45}
@@ -131,6 +135,8 @@ td.lead-cell{min-width:190px}
 .badge.src-gold .bdot{background:var(--gold)}
 .badge.src-blue{background:var(--blue-wash);color:var(--blue-text)}
 .badge.src-blue .bdot{background:var(--blue)}
+.badge.src-green{background:var(--green-wash);color:var(--green-text)}
+.badge.src-green .bdot{background:var(--green)}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;border:none;white-space:nowrap}
 .pill .pdot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.75}
 .date-cell{font-size:12.5px;color:var(--muted);white-space:nowrap}
@@ -254,6 +260,7 @@ td.lead-cell{min-width:190px}
 .kb-card{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:13px 14px 12px;box-shadow:var(--shadow-sm);cursor:grab;position:relative;overflow:hidden;transition:box-shadow .18s, transform .12s, border-color .18s;border-left-width:4px;touch-action:pan-y}
 .kb-card.is-organic{border-left-color:var(--gold)}
 .kb-card.is-automate{border-left-color:var(--blue)}
+.kb-card.is-wta{border-left-color:var(--green)}
 .kb-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
 .kb-card:active{cursor:grabbing}
 .kb-card.dragging{opacity:.32;box-shadow:none}
@@ -383,6 +390,7 @@ body.kb-dragging{cursor:grabbing;-webkit-user-select:none;user-select:none}
         <button data-src="all" class="active">All</button>
         <button data-src="organic">Instagram / Other</button>
         <button data-src="automate">Automate</button>
+        <button data-src="wta">Window Tint Academy</button>
       </div>
       <div class="select-wrap">
         <select id="statusFilter">
@@ -475,7 +483,7 @@ body.kb-dragging{cursor:grabbing;-webkit-user-select:none;user-select:none}
     <div class="field"><label>Phone</label><input id="mPhone"></div>
     <div class="field"><label>Social media / Business</label><input id="mSocial"></div>
     <div class="field"><label>Heard from</label>
-      <select id="mHeard"><option value="instagram">Instagram</option><option value="other">Other</option><option value="automate">Automate</option></select>
+      <select id="mHeard"><option value="instagram">Instagram</option><option value="other">Other</option><option value="automate">Automate</option><option value="window tint academy">Window Tint Academy</option></select>
     </div>
     <div class="field"><label>Source</label><input id="mSource" value="Manual entry"></div>
     <div class="modal-actions">
