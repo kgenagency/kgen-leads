@@ -44,7 +44,7 @@ const demoLeads = [
   { id: 7, created_at: '2026-06-30T15:40:00Z', name: 'Nikita Buria', email: 'nikitaburia68@gmail.com', phone: '2262248564', social: '@imdetailing.toronto', heard_from: 'automate', source: 'Booking page', status: 'client' },
   { id: 8, created_at: '2026-06-29T11:15:00Z', name: 'Shian Jeremie', email: 'sjfinehomez@gmail.com', phone: '2892138637', social: 'Autgloo', heard_from: 'other', source: 'Booking page', status: 'no_response' },
   { id: 9, created_at: '2026-06-29T09:30:00Z', name: 'Chase Bangalie', email: 'chasebanglie@gmail.com', phone: '2892000701', social: 'Chasevibeshinedetailing', heard_from: 'instagram', source: 'Booking page', status: 'lost' },
-  { id: 10, created_at: '2026-07-12T14:05:00Z', name: 'Marcus Reed', email: 'marcus@tintprofinish.com', phone: '4165550199', social: 'Tint Pro Finish', heard_from: 'window tint academy', source: 'Booking page', status: 'new' },
+  { id: 10, created_at: '2026-07-12T14:05:00Z', name: 'Marcus Reed', email: 'marcus@tintprofinish.com', phone: '4165550199', social: 'Tint Pro Finish', heard_from: 'tint academy', source: 'Booking page', status: 'new' },
 ];
 const demoActivities = {
   1: [
@@ -67,13 +67,13 @@ const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 function srcGroup(heard) {
   const h = (heard || '').toLowerCase().trim();
   if (h === 'automate') return 'automate';
-  if (h.includes('window tint')) return 'wta';
+  if (h.includes('tint academy')) return 'wta';
   return 'organic';
 }
 function heardBadge(heard) {
   const h = (heard || '').toLowerCase().trim();
   if (h === 'automate') return `<span class="badge src-blue"><span class="bdot"></span>Automate</span>`;
-  if (h.includes('window tint')) return `<span class="badge src-green"><span class="bdot"></span>Window Tint Academy</span>`;
+  if (h.includes('tint academy')) return `<span class="badge src-green"><span class="bdot"></span>Tint Academy</span>`;
   const label = h === 'instagram' ? 'Instagram' : (h ? cap(h) : 'Unknown');
   return `<span class="badge src-gold"><span class="bdot"></span>${esc(label)}</span>`;
 }
@@ -331,7 +331,7 @@ function renderStats() {
       <div class="stat-note">booked, held or closed</div></div>
     <div class="stat"><div class="stat-label"><span class="stat-dot"></span>Clients</div>
       <div class="stat-value">${clients}</div>
-      <div class="stat-note"><b>${autom}</b> via Automate · <b>${wta}</b> via WTA</div></div>`;
+      <div class="stat-note"><b>${autom}</b> via Automate · <b>${wta}</b> via Tint Academy</div></div>`;
 }
 
 function renderFollowups() {
