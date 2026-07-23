@@ -44,6 +44,7 @@ const demoLeads = [
   { id: 7, created_at: '2026-06-30T15:40:00Z', name: 'Nikita Buria', email: 'nikitaburia68@gmail.com', phone: '2262248564', social: '@imdetailing.toronto', heard_from: 'automate', source: 'Booking page', status: 'client' },
   { id: 8, created_at: '2026-06-29T11:15:00Z', name: 'Shian Jeremie', email: 'sjfinehomez@gmail.com', phone: '2892138637', social: 'Autgloo', heard_from: 'other', source: 'Booking page', status: 'no_response' },
   { id: 9, created_at: '2026-06-29T09:30:00Z', name: 'Chase Bangalie', email: 'chasebanglie@gmail.com', phone: '2892000701', social: 'Chasevibeshinedetailing', heard_from: 'instagram', source: 'Booking page', status: 'lost' },
+  { id: 10, created_at: '2026-07-12T14:05:00Z', name: 'Marcus Reed', email: 'marcus@tintprofinish.com', phone: '4165550199', social: 'Tint Pro Finish', heard_from: 'window tint academy', source: 'Booking page', status: 'new' },
 ];
 const demoActivities = {
   1: [
@@ -64,13 +65,20 @@ const esc = (s) => (s || '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;'
 const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
 function srcGroup(heard) {
-  return (heard || '').toLowerCase().trim() === 'automate' ? 'automate' : 'organic';
+  const h = (heard || '').toLowerCase().trim();
+  if (h === 'automate') return 'automate';
+  if (h.includes('window tint')) return 'wta';
+  return 'organic';
 }
 function heardBadge(heard) {
   const h = (heard || '').toLowerCase().trim();
   if (h === 'automate') return `<span class="badge src-blue"><span class="bdot"></span>Automate</span>`;
+  if (h.includes('window tint')) return `<span class="badge src-green"><span class="bdot"></span>Window Tint Academy</span>`;
   const label = h === 'instagram' ? 'Instagram' : (h ? cap(h) : 'Unknown');
   return `<span class="badge src-gold"><span class="bdot"></span>${esc(label)}</span>`;
+}
+function accentClass(g) {
+  return g === 'automate' ? 'blue' : (g === 'wta' ? 'green' : 'gold');
 }
 function statusPill(status) {
   return `<span class="pill st-${status}"><span class="pdot"></span>${ST[status] || status}</span>`;
@@ -310,6 +318,7 @@ function renderStats() {
   const clients = state.leads.filter(l => l.status === 'client').length;
   const calls = state.leads.filter(l => ['call_booked', 'call_held', 'client'].includes(l.status)).length;
   const autom = state.leads.filter(l => srcGroup(l.heard_from) === 'automate').length;
+  const wta = state.leads.filter(l => srcGroup(l.heard_from) === 'wta').length;
   $('stats').innerHTML = `
     <div class="stat"><div class="stat-label"><span class="stat-dot"></span>Total leads</div>
       <div class="stat-value">${state.leads.length}</div>
@@ -322,7 +331,7 @@ function renderStats() {
       <div class="stat-note">booked, held or closed</div></div>
     <div class="stat"><div class="stat-label"><span class="stat-dot"></span>Clients</div>
       <div class="stat-value">${clients}</div>
-      <div class="stat-note"><b>${autom}</b> leads via Automate</div></div>`;
+      <div class="stat-note"><b>${autom}</b> via Automate · <b>${wta}</b> via WTA</div></div>`;
 }
 
 function renderFollowups() {
@@ -362,7 +371,7 @@ function renderKanban() {
         ${col.length ? col.map(l => {
           const g = srcGroup(l.heard_from);
           const social = cleanSocial(l.social) || l.email || '';
-          return `<div class="kb-card ${g === 'automate' ? 'is-automate' : 'is-organic'}" data-id="${l.id}">
+          return `<div class="kb-card is-${g}" data-id="${l.id}">
             <div class="kb-card-head">
               <div class="kb-name">${esc(l.name)}</div>
               ${fuBtnHtml(l)}
@@ -478,7 +487,7 @@ function renderTableView() {
     const g = srcGroup(l.heard_from);
     return `<tr data-id="${l.id}">
       <td class="lead-cell" style="position:relative">
-        <span class="accent ${g === 'automate' ? 'blue' : 'gold'}"></span>
+        <span class="accent ${accentClass(g)}"></span>
         <div class="lead-name">${esc(l.name)}${fuBtnHtml(l)}</div>
         <div class="lead-social">${esc(cleanSocial(l.social))}</div>
       </td>
@@ -494,7 +503,7 @@ function renderTableView() {
   $('cards').innerHTML = rows.map(l => {
     const g = srcGroup(l.heard_from);
     return `<div class="lead-card" data-id="${l.id}">
-      <span class="accent ${g === 'automate' ? 'blue' : 'gold'}"></span>
+      <span class="accent ${accentClass(g)}"></span>
       <div class="lead-card-top">
         <div><div class="lead-name">${esc(l.name)}${fuBtnHtml(l)}</div><div class="lead-social">${esc(cleanSocial(l.social))}</div></div>
         ${statusPill(l.status)}
