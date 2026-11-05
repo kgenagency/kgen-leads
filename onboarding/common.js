@@ -9,11 +9,9 @@ window.KG = (function () {
 
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  // Services list incl. "Other" free text
+  // Selected services, in priority order
   function servicesOf(data) {
-    const s = Array.isArray(data.services) ? data.services.slice() : [];
-    if (data.services_other) data.services_other.split(',').map((x) => x.trim()).filter(Boolean).forEach((x) => s.push(x));
-    return s;
+    return Array.isArray(data.services) ? data.services.slice() : [];
   }
 
   // Human-readable value for a field (used in review + admin)
@@ -25,6 +23,7 @@ window.KG = (function () {
         if (f.other && data[f.k + '_other']) arr.push(data[f.k + '_other']);
         return arr.join(', ');
       }
+      case 'pickrank':
       case 'rank':
         return (Array.isArray(v) ? v : []).map((x, i) => `${i + 1}. ${x}`).join('\n');
       case 'offers':

@@ -40,8 +40,11 @@
         const other = f.other ? `<input class="inp other-inp" data-k="${f.k}_other" placeholder="Other (separate with commas)" value="${esc(data[f.k + '_other'] || '')}">` : '';
         return `<div class="${cls}" data-f="${f.k}"><div class="lbl">${esc(f.label)}</div><div class="chips">${f.opts.map((o) => `<label class="chip"><input type="checkbox" value="${esc(o)}" data-check="${f.k}"${arr.includes(o) ? ' checked' : ''}><span>${esc(o)}</span></label>`).join('')}</div>${other}${hint}</div>`;
       }
-      case 'rank':
-        return `<div class="${cls}" data-f="${f.k}"><div class="lbl">${esc(f.label)}</div><div class="rank" id="rank_${f.k}"></div>${hint}</div>`;
+      case 'pickrank':
+        return `<div class="${cls}" data-f="${f.k}"><div class="lbl">${esc(f.label)}${f.req ? '<span class="req">*</span>' : ''}</div>
+          ${hint.replace('class="hint"', 'class="hint hint-top"')}<div class="chips pick" id="pick_${f.k}"></div>
+          <div class="add-row"><input class="inp" id="svc_custom" placeholder="Missing a service? Type it here"><button type="button" class="btn btn-ghost btn-add" data-addsvc="${f.k}">Add</button></div>
+          <div class="order-wrap"><div class="order-title">Your priority order</div><div class="rank" id="rank_${f.k}"></div></div>${err}</div>`;
       case 'offers':
         return `<div class="${cls}" data-f="${f.k}"><div class="lbl">${esc(f.label)}</div><div id="offers_${f.k}"></div>${hint}</div>`;
       case 'zones':
@@ -70,23 +73,42 @@
   }
 
   /* ---------- dynamic parts (depend on selected services) ---------- */
-  function syncRank() {
-    const services = servicesOf(data);
-    let r = (Array.isArray(data.priority) ? data.priority : []).filter((x) => services.includes(x));
-    services.forEach((s) => { if (!r.includes(s)) r.push(s); });
-    data.priority = r;
-    const box = $('rank_priority');
-    if (!box) return;
-    if (!r.length) { box.innerHTML = '<div class="empty">Select services above and they will show up here.</div>'; return; }
-    box.innerHTML = r.map((s, i) => `<div class="rank-item"><div class="rank-n">${i + 1}</div><div class="rank-name">${esc(s)}</div><div class="rank-btns">
+  function pickField() { for (const sec of SECTIONS) for (const f of sec.fields) if (f.type === 'pickrank') return f; }
+  function syncPick() {
+    const f = pickField(); const box = $('pick_' + f.k); if (!box) return;
+    const sel = Array.isArray(data[f.k]) ? data[f.k] : (data[f.k] = []);
+    const custom = Array.isArray(data.services_custom) ? data.services_custom : [];
+    const all = [...f.opts, ...custom.filter((c) => !f.opts.includes(c))];
+    box.innerHTML = all.map((o) => {
+      const n = sel.indexOf(o) + 1;
+      return `<button type="button" class="pchip${n ? ' on' : ''}" data-pick="${esc(o)}" aria-pressed="${n ? 'true' : 'false'}">${n ? `<b>${n}</b>` : '<i></i>'}${esc(o)}</button>`;
+    }).join('');
+    const r = $('rank_' + f.k);
+    r.parentElement.hidden = sel.length < 2;
+    r.innerHTML = sel.map((s, i) => `<div class="rank-item"><div class="rank-n">${i + 1}</div><div class="rank-name">${esc(s)}</div><div class="rank-btns">
       <button type="button" class="mini" data-mv="${i}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="Move up"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 15l6-6 6 6"/></svg></button>
-      <button type="button" class="mini" data-mv="${i}" data-d="1" ${i === r.length - 1 ? 'disabled' : ''} aria-label="Move down"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button></div></div>`).join('');
+      <button type="button" class="mini" data-mv="${i}" data-d="1" ${i === sel.length - 1 ? 'disabled' : ''} aria-label="Move down"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button>
+      <button type="button" class="mini" data-unpick="${esc(s)}" aria-label="Remove"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>`).join('');
+  }
+  function togglePick(name) {
+    const sel = data.services = Array.isArray(data.services) ? data.services : [];
+    const i = sel.indexOf(name); i >= 0 ? sel.splice(i, 1) : sel.push(name);
+    const fe = form.querySelector('[data-f="services"]'); if (fe) fe.classList.remove('err');
+    syncPick(); save();
+  }
+  function addCustom() {
+    const inp = $('svc_custom'); const v = inp.value.trim(); if (!v) return;
+    data.services_custom = Array.isArray(data.services_custom) ? data.services_custom : [];
+    const f = pickField();
+    if (!f.opts.includes(v) && !data.services_custom.includes(v)) data.services_custom.push(v);
+    if (!(data.services || []).includes(v)) togglePick(v); else syncPick();
+    inp.value = ''; inp.focus();
   }
 
   function syncOffers() {
     const box = $('offers_offers');
     if (!box) return;
-    const services = data.priority && data.priority.length ? data.priority : servicesOf(data);
+    const services = servicesOf(data);
     data.offers = data.offers || {};
     if (!services.length) { box.innerHTML = '<div class="empty">Pick your services in the Ad Setup step first.</div>'; return; }
     box.innerHTML = services.map((s) => `<div class="offer"><label>${esc(s)}</label><input class="inp" data-offer="${esc(s)}" placeholder="e.g. Free interior detail with any coating package" value="${esc(data.offers[s] || '')}"></div>`).join('');
@@ -125,7 +147,7 @@
     const on = $('pSteps').querySelector('.on');
     if (on) on.scrollIntoView({ block: 'nearest', inline: 'center' });
     if (step === SECTIONS.length) renderReview();
-    if (step < SECTIONS.length) { syncRank(); syncOffers(); syncZones(); }
+    if (step < SECTIONS.length) { syncPick(); syncOffers(); syncZones(); }
   }
 
   function validate(i) {
@@ -135,11 +157,11 @@
       const el = form.querySelector(`[data-f="${f.k}"]`);
       if (!el) return;
       let bad = false;
-      const v = (data[f.k] || '').toString().trim();
+      const raw = data[f.k]; const v = Array.isArray(raw) ? raw.join(',') : (raw || '').toString().trim();
       if (f.req && !v) bad = true;
       if (!bad && v && f.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) bad = true;
       el.classList.toggle('err', bad);
-      if (bad) { el.querySelector('.errmsg').textContent = v ? 'Please enter a valid email.' : 'This one is required.'; ok = false; first = first || el; }
+      if (bad) { el.querySelector('.errmsg').textContent = f.type === 'pickrank' ? 'Pick at least one service.' : v ? 'Please enter a valid email.' : 'This one is required.'; ok = false; first = first || el; }
     });
     if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return ok;
@@ -184,7 +206,6 @@
     if (t.dataset.offer) { data.offers = data.offers || {}; data.offers[t.dataset.offer] = t.value; }
     if (t.dataset.accid) { data.access = data.access || {}; (data.access[t.dataset.accid] = data.access[t.dataset.accid] || {}).id = t.value; }
     if (t.dataset.zone) data.zones_include[+t.dataset.zone][t.dataset.zf] = t.value;
-    if (t.dataset.k === 'services_other') syncRank();
     const fEl = t.closest('.f'); if (fEl) fEl.classList.remove('err');
     save();
   });
@@ -194,21 +215,28 @@
       const arr = new Set(Array.isArray(data[t.dataset.check]) ? data[t.dataset.check] : []);
       t.checked ? arr.add(t.value) : arr.delete(t.value);
       data[t.dataset.check] = [...arr];
-      if (t.dataset.check === 'services') syncRank();
     }
     if (t.type === 'radio' && t.dataset.k) data[t.dataset.k] = t.value;
     if (t.dataset.acc) { data.access = data.access || {}; (data.access[t.dataset.acc] = data.access[t.dataset.acc] || {}).status = t.value; }
     save();
   });
   document.addEventListener('click', (e) => {
+    const pk = e.target.closest('[data-pick]');
+    if (pk) { togglePick(pk.dataset.pick); return; }
+    const up = e.target.closest('[data-unpick]');
+    if (up) { togglePick(up.dataset.unpick); return; }
+    if (e.target.closest('[data-addsvc]')) { addCustom(); return; }
     const mv = e.target.closest('[data-mv]');
-    if (mv) { const i = +mv.dataset.mv, j = i + +mv.dataset.d; const r = data.priority; [r[i], r[j]] = [r[j], r[i]]; syncRank(); save(); return; }
+    if (mv) { const i = +mv.dataset.mv, j = i + +mv.dataset.d; const r = data.services; [r[i], r[j]] = [r[j], r[i]]; syncPick(); save(); return; }
     const az = e.target.closest('[data-addzone]');
     if (az) { data.zones_include.push({ city: '', radius: '' }); syncZones(); save(); return; }
     const rz = e.target.closest('[data-rmzone]');
     if (rz) { data.zones_include.splice(+rz.dataset.rmzone, 1); syncZones(); save(); return; }
     const g = e.target.closest('[data-goto]');
     if (g) { const n = +g.dataset.goto; if (n <= step) go(n); else go(n); }
+  });
+  form.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.id === 'svc_custom') { e.preventDefault(); addCustom(); }
   });
   $('next').addEventListener('click', () => (step === SECTIONS.length ? submit() : go(step + 1)));
   $('back').addEventListener('click', () => go(step - 1));
