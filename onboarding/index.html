@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KGEN Client Onboarding</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23F2C014'/><text x='50' y='70' font-size='58' text-anchor='middle' fill='%2314181C' font-family='Arial' font-weight='bold'>K</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="topline">
+    <div class="logo"><div class="logo-mark">K</div>KGEN</div>
+    <div class="secure"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>Private and encrypted</div>
+  </div>
+
+  <div id="intro" class="hero">
+    <h1>Let's get your account <span>built.</span></h1>
+    <p>This takes about 10 minutes. Everything you enter here goes straight to our team and sets up your ads, your CRM, and your lead flow. Your progress saves automatically, so you can close this page and come back later.</p>
+  </div>
+
+  <div class="progress" id="progress">
+    <div class="progress-row"><span id="pLabel"></span><b id="pPct"></b></div>
+    <div class="bar"><i id="pBar"></i></div>
+    <div class="steps" id="pSteps"></div>
+  </div>
+
+  <form id="form" novalidate></form>
+
+  <div class="nav" id="nav">
+    <button type="button" class="btn btn-ghost" id="back">Back</button>
+    <span class="saved" id="saved"></span>
+    <button type="button" class="btn btn-accent" id="next">Continue</button>
+  </div>
+
+  <div class="section done-card" id="done">
+    <div class="done-icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></div>
+    <h2>You're all set.</h2>
+    <p>We have everything we need to start building. Our team will review your details and reach out on Slack with next steps.</p>
+  </div>
+
+  <div class="foot">KGEN · kgenagency.com</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../config.js"></script>
+<script src="fields.js"></script>
+<script src="common.js"></script>
+<script src="form.js"></script>
+</body>
+</html>
