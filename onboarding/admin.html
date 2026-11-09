@@ -95,6 +95,7 @@
     <div class="bar-top">
       <div class="logo"><div class="logo-mark">K</div>Onboarding</div>
       <span class="who" id="who"></span>
+      <button class="btn btn-ghost btn-sm" id="teamBtn">Team</button>
       <button class="btn btn-ghost btn-sm" id="refresh">Refresh</button>
       <button class="btn btn-ghost btn-sm" id="logout">Sign out</button>
     </div>
@@ -121,6 +122,23 @@
     <button class="btn btn-danger btn-sm" id="dDel" style="margin-left:auto">Delete</button>
   </div>
   <div class="d-body" id="dBody"></div>
+</aside>
+
+<aside class="drawer" id="team" aria-hidden="true">
+  <div class="d-head"><div><h2>Team logins</h2><div class="r-sub">Everyone here can sign in to the onboarding admin and the Lead CRM.</div></div><button class="mini d-close" id="tClose" aria-label="Close">×</button></div>
+  <div class="d-body">
+    <form class="internal" id="tForm" autocomplete="off">
+      <h3>ADD A TEAM MEMBER</h3>
+      <div class="grid">
+        <div class="f half"><label for="tUser">Username</label><input class="inp" id="tUser" placeholder="vasilije" autocomplete="off" required></div>
+        <div class="f half"><label for="tName">Display name</label><input class="inp" id="tName" placeholder="Vasilije"></div>
+        <div class="f"><label for="tPass">Password</label><input class="inp" id="tPass" type="password" autocomplete="new-password" placeholder="At least 8 characters" required></div>
+      </div>
+      <div class="lerr" id="tErr" style="margin-top:12px"></div>
+      <button class="btn btn-accent btn-sm" type="submit" id="tAdd" style="margin-top:14px">Create login</button>
+    </form>
+    <div class="list" id="tList"></div>
+  </div>
 </aside>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>

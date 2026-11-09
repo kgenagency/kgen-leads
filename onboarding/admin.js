@@ -17,7 +17,7 @@
   /* ---------- auth ---------- */
   async function login(e) {
     e.preventDefault();
-    const u = $('lu').value.trim().toLowerCase(); const p = $('lp').value;
+    const u = $('lu').value.trim().toLowerCase().split('@')[0]; const p = $('lp').value;
     $('lbtn').disabled = true; $('lerr').style.display = 'none';
     if (DEMO) { me = u || 'demo'; return enter(); }
     const { data, error } = await sb.auth.signInWithPassword({ email: `${u}@${AUTH_DOMAIN}`, password: p });
@@ -144,6 +144,36 @@
     const ref = $('refIn').value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const link = base + (ref ? '?client=' + ref : '');
     await navigator.clipboard.writeText(link); KG.toast('Link copied: ' + link);
+  });
+
+  /* ---------- team ---------- */
+  async function loadTeam() {
+    if (DEMO) { $('tList').innerHTML = '<div class="empty-big">Team list shows once the admin is connected to Supabase.</div>'; return; }
+    const { data, error } = await sb.rpc('kgen_list_team');
+    if (error) { $('tList').innerHTML = `<div class="empty-big">Team list is not set up yet. Run team.sql in Supabase once.</div>`; console.error(error); return; }
+    $('tList').innerHTML = data.map((u) => `<div class="row" style="grid-template-columns:1fr auto;cursor:default">
+      <div><div class="r-biz">${esc(u.display_name)}</div><div class="r-sub">Username: ${esc(u.username)}</div></div>
+      <div class="r-sub">${u.last_sign_in_at ? 'Last sign in ' + when(u.last_sign_in_at) : 'Never signed in'}</div></div>`).join('');
+  }
+  function openTeam() { $('team').classList.add('on'); $('scrim').classList.add('on'); $('team').setAttribute('aria-hidden', 'false'); loadTeam(); }
+  function closeTeam() { $('team').classList.remove('on'); $('team').setAttribute('aria-hidden', 'true'); if (!current) $('scrim').classList.remove('on'); }
+  $('teamBtn').addEventListener('click', openTeam);
+  $('tClose').addEventListener('click', closeTeam);
+  $('scrim').addEventListener('click', closeTeam);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeTeam(); });
+  $('tForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const u = $('tUser').value.trim().toLowerCase(), n = $('tName').value.trim(), p = $('tPass').value;
+    $('tErr').style.display = 'none';
+    if (DEMO) { KG.toast('Demo mode: connect Supabase to create logins'); return; }
+    $('tAdd').disabled = true;
+    const { error } = await sb.rpc('kgen_create_team_user', { p_username: u, p_password: p, p_display: n || null });
+    $('tAdd').disabled = false;
+    if (error) {
+      $('tErr').textContent = /function|schema cache/i.test(error.message) ? 'Team logins are not set up yet. Run team.sql in Supabase once.' : error.message;
+      $('tErr').style.display = 'block'; return;
+    }
+    $('tForm').reset(); KG.toast(`Login created. Username: ${u}`); loadTeam();
   });
 
   /* ---------- init ---------- */
